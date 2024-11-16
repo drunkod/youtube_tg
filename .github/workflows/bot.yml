@@ -40,8 +40,10 @@ jobs:
 
       - name: Download Video
         id: download
+        env:
+            YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
         run: |
-          echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+          echo "$YOUTUBE_COOKIES" > cookies.txt
           chmod 600 cookies.txt
           ls cookies.txt
           echo "hello"
