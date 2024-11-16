@@ -41,7 +41,9 @@ jobs:
       - name: Download Video
         id: download
         run: |
-          cat cookies.txt
+          echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+          chmod 600 cookies.txt
+          ls cookies.txt
           echo "hello"
           mkdir -p downloads
           yt-dlp \
