@@ -21,6 +21,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install yt-dlp python-telegram-bot requests
+          
+      - name: Setup cookies
+        run: |
+          echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
+          chmod 600 cookies.txt     
 
       - name: Extract YouTube URL
         id: extract-url
@@ -37,6 +42,7 @@ jobs:
             --format "best[filesize<50M]" \
             --output "downloads/%(title)s.%(ext)s" \
             --no-playlist \
+            --cookies cookies.txt \
             "${{ steps.extract-url.outputs.youtube_url }}"
           echo "video_path=$(ls downloads/* | head -1)" >> $GITHUB_OUTPUT
 
