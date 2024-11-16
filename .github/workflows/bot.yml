@@ -24,6 +24,7 @@ jobs:
           
       - name: Setup cookies
         run: |
+          echo "${{ secrets.YOUTUBE_COOKIES }}"
           echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
           chmod 600 cookies.txt     
 
