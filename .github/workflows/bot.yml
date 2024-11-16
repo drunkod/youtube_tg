@@ -29,7 +29,8 @@ jobs:
         run: |
           echo "${{ secrets.YOUTUBE_COOKIES }}"
           echo "${{ secrets.YOUTUBE_COOKIES }}" > cookies.txt
-          chmod 600 cookies.txt     
+          cat cookies.txt
+          # chmod 600 cookies.txt     
 
       - name: Extract YouTube URL
         id: extract-url
