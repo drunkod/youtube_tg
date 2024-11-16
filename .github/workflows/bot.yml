@@ -1,0 +1,99 @@
+name: YouTube Download Bot
+
+on:
+  discussion_comment:
+    types: [created]
+
+jobs:
+  process-youtube-link:
+    if: contains(github.event.comment.body, 'youtube.com') || contains(github.event.comment.body, 'youtu.be')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install yt-dlp python-telegram-bot requests
+
+      - name: Extract YouTube URL
+        id: extract-url
+        run: |
+          COMMENT_BODY="${{ github.event.comment.body }}"
+          YOUTUBE_URL=$(echo "$COMMENT_BODY" | grep -o 'https://[^[:space:]]*youtube[^[:space:]]*' | head -1)
+          echo "youtube_url=$YOUTUBE_URL" >> $GITHUB_OUTPUT
+
+      - name: Download Video
+        id: download
+        run: |
+          mkdir -p downloads
+          yt-dlp \
+            --format "best[filesize<50M]" \
+            --output "downloads/%(title)s.%(ext)s" \
+            --no-playlist \
+            "${{ steps.extract-url.outputs.youtube_url }}"
+          echo "video_path=$(ls downloads/* | head -1)" >> $GITHUB_OUTPUT
+
+      - name: Upload to Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ github.event.comment.user.id }}
+        run: |
+          VIDEO_PATH="${{ steps.download.outputs.video_path }}"
+          curl -F "chat_id=$CHAT_ID" \
+               -F "video=@$VIDEO_PATH" \
+               -F "caption=Downloaded from: ${{ steps.extract-url.outputs.youtube_url }}" \
+               "https://api.telegram.org/bot$BOT_TOKEN/sendVideo"
+
+      - name: Upload as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: downloaded-video
+          path: ${{ steps.download.outputs.video_path }}
+          retention-days: 1
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf downloads/
+
+      - name: Reply to comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = context.payload.comment;
+            const reply = `✅ Video downloaded and sent to Telegram!\n\nYou can also download it from the workflow artifacts.`;
+            
+            github.rest.discussions.createReply({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              discussion_number: context.payload.discussion.number,
+              body: reply,
+              comment_id: comment.id
+            });
+
+  handle-error:
+    needs: process-youtube-link
+    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Reply with error
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = context.payload.comment;
+            const errorReply = `❌ Sorry, there was an error processing your request.\nPlease make sure the YouTube URL is valid and the video is not too large.`;
+            
+            github.rest.discussions.createReply({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              discussion_number: context.payload.discussion.number,
+              body: errorReply,
+              comment_id: comment.id
+            });
