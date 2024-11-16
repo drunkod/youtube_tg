@@ -3,7 +3,10 @@ name: YouTube Download Bot
 on:
   discussion_comment:
     types: [created]
-
+    
+permissions:
+  contents: write
+  
 jobs:
   process-youtube-link:
     if: contains(github.event.comment.body, 'youtube.com') || contains(github.event.comment.body, 'youtu.be')
