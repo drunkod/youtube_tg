@@ -53,7 +53,10 @@ jobs:
           echo "$YOUTUBE_COOKIES" > cookies.txt
           chmod 600 cookies.txt
           mkdir -p downloads
-          yt-dlp --list-formats "${{ steps.extract-url.outputs.youtube_url }}"
+          yt-dlp \
+          --cookies cookies.txt \
+          --list-formats \
+          "${{ steps.extract-url.outputs.youtube_url }}"
           yt-dlp \
             --format "bestvideo[ext=mp4][filesize<40M]+bestaudio[ext=m4a][filesize<10M]/best[ext=webm][filesize<50M]" \
             --output "downloads/%(title)s.%(ext)s" \
