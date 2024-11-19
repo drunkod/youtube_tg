@@ -46,8 +46,6 @@ jobs:
         run: |
           echo "$YOUTUBE_COOKIES" > cookies.txt
           chmod 600 cookies.txt
-          ls cookies.txt
-          echo "hello"
           mkdir -p downloads
           yt-dlp \
             --format "best[filesize<50M]" \
@@ -60,7 +58,7 @@ jobs:
       - name: Upload to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ github.event.comment.user.id }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           VIDEO_PATH="${{ steps.download.outputs.video_path }}"
           curl -F "chat_id=$CHAT_ID" \
@@ -68,16 +66,16 @@ jobs:
                -F "caption=Downloaded from: ${{ steps.extract-url.outputs.youtube_url }}" \
                "https://api.telegram.org/bot$BOT_TOKEN/sendVideo"
 
-      - name: Upload as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: downloaded-video
-          path: ${{ steps.download.outputs.video_path }}
-          retention-days: 1
+      # - name: Upload as artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: downloaded-video
+      #     path: ${{ steps.download.outputs.video_path }}
+      #     retention-days: 1
 
-      - name: Cleanup
-        if: always()
-        run: rm -rf downloads/
+      # - name: Cleanup
+      #   if: always()
+      #   run: rm -rf downloads/
 
       - name: Reply to comment
         uses: actions/github-script@v6
