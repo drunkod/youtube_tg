@@ -54,7 +54,7 @@ jobs:
           chmod 600 cookies.txt
           mkdir -p downloads
           yt-dlp \
-            --format "bestvideo[ext=mp4][filesize<50M]+bestaudio[ext=m4a]/best[ext=mp4][filesize<50M]" \
+            --format "bestvideo[ext=mp4][filesize<40M]+bestaudio[ext=m4a][filesize<10M]/best[ext=webm][filesize<50M]" \
             --output "downloads/%(title)s.%(ext)s" \
             --no-playlist \
             --cookies cookies.txt \
