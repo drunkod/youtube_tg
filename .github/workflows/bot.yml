@@ -38,7 +38,12 @@ jobs:
         run: |
           COMMENT_BODY="${{ github.event.comment.body }}"
           YOUTUBE_URL=$(echo "$COMMENT_BODY" | grep -o 'https://[^[:space:]]*youtube[^[:space:]]*' | head -1)
+          # Add a fallback for youtu.be
+          if [ -z "$YOUTUBE_URL" ]; then
+          YOUTUBE_URL=$(echo "$COMMENT_BODY" | grep -o 'https://youtu.be/[^[:space:]]*' | head -1)
+          fi
           echo "youtube_url=$YOUTUBE_URL" >> $GITHUB_OUTPUT
+          echo "Extracted YouTube URL: $YOUTUBE_URL"
 
       - name: Download Video
         id: download
